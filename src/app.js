@@ -30,17 +30,15 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
-// CORS configuration
+// CORS configuration (handles OPTIONS preflight automatically)
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
         ? ['https://smart-agriculture-frontend-omega.vercel.app']
         : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
 }));
-
-// Handle preflight requests
-app.options('/*', cors());
 
 // Body parser
 app.use(express.json({ limit: '10mb' }));

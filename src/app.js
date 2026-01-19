@@ -27,9 +27,12 @@ const app = express();
 
 // CORS configuration (MUST be first - handles OPTIONS preflight automatically)
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production'
-        ? ['https://smart-agriculture-frontend-omega.vercel.app']
-        : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
+    origin: [
+        'https://smart-agriculture-frontend-omega.vercel.app',
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:3000'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,

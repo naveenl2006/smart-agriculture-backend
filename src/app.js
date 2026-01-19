@@ -66,6 +66,14 @@ app.use('/api/farm-setup', farmSetupRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/iot', iotRoutes);
 
+// Root route
+app.get("/", (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "Smart Agriculture Backend is running 🚜🌱"
+    });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({

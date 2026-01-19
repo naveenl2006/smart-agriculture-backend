@@ -25,12 +25,7 @@ const iotRoutes = require('./routes/iotRoutes');
 
 const app = express();
 
-// Security middleware
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-}));
-
-// CORS configuration (handles OPTIONS preflight automatically)
+// CORS configuration (MUST be first - handles OPTIONS preflight automatically)
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
         ? ['https://smart-agriculture-frontend-omega.vercel.app']
@@ -38,6 +33,11 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
+}));
+
+// Security middleware (after CORS)
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
 // Body parser

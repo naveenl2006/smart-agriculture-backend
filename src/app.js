@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
 const { errorHandler, notFound } = require('./middlewares/errorHandler');
-const { apiLimiter } = require('./middlewares/rateLimiter');
+const { apiLimiter, authLimiter } = require('./middlewares/rateLimiter');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -54,7 +54,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api', apiLimiter);
 
 // API Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/crops', cropRoutes);
 app.use('/api/diseases', diseaseRoutes);
 app.use('/api/market', marketRoutes);

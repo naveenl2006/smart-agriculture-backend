@@ -6,7 +6,19 @@ const path = require('path');
 // @access  Private
 const registerVehicle = async (req, res, next) => {
     try {
-        const { ownerName, location, vehicleType, vehicleNumber, phoneNumber, perHourRent } = req.body;
+        const {
+            ownerName,
+            name,
+            location,
+            latitude,
+            longitude,
+            vehicleType,
+            vehicleNumber,
+            phoneNumber,
+            perHourRent,
+            pricePerDay,
+            availabilityStatus
+        } = req.body;
 
         // Check if image was uploaded
         if (!req.file) {
@@ -21,6 +33,31 @@ const registerVehicle = async (req, res, next) => {
             return res.status(400).json({
                 success: false,
                 message: 'All fields are required: ownerName, location, vehicleType, vehicleNumber, phoneNumber, perHourRent',
+            });
+        }
+
+        // Validate GPS coordinates
+        if (!latitude || !longitude) {
+            return res.status(400).json({
+                success: false,
+                message: 'GPS coordinates (latitude and longitude) are required',
+            });
+        }
+
+        const lat = parseFloat(latitude);
+        const lng = parseFloat(longitude);
+
+        if (isNaN(lat) || lat < -90 || lat > 90) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid latitude. Must be between -90 and 90',
+            });
+        }
+
+        if (isNaN(lng) || lng < -180 || lng > 180) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid longitude. Must be between -180 and 180',
             });
         }
 
@@ -49,11 +86,16 @@ const registerVehicle = async (req, res, next) => {
 
         const vehicle = await Vehicle.create({
             ownerName: ownerName.trim(),
+            name: name?.trim() || `${ownerName}'s ${vehicleType}`,
             location: location.trim(),
+            latitude: lat,
+            longitude: lng,
             vehicleType: vehicleType.toLowerCase(),
             vehicleNumber: vehicleNumber.toUpperCase(),
             phoneNumber: phoneNumber.trim(),
             perHourRent: Number(perHourRent),
+            pricePerDay: pricePerDay ? Number(pricePerDay) : Number(perHourRent) * 8,
+            availabilityStatus: availabilityStatus !== undefined ? availabilityStatus : true,
             imagePath,
         });
 

@@ -22,6 +22,7 @@ const seedRoutes = require('./routes/seedRoutes');
 const farmSetupRoutes = require('./routes/farmSetupRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const iotRoutes = require('./routes/iotRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
@@ -70,6 +71,7 @@ app.use('/api/seeds', seedRoutes);
 app.use('/api/farm-setup', farmSetupRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/iot', iotRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Root route
 app.get("/", (req, res) => {

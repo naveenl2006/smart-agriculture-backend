@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const VEHICLE_TYPES = ['tractor', 'harvester', 'rotavator', 'sprayer'];
+const VEHICLE_TYPES = ['tractor', 'harvester', 'rotavator', 'sprayer', 'earth_mover', 'car', 'bike', 'equipment'];
 
 const vehicleSchema = new mongoose.Schema({
     ownerName: {
@@ -8,16 +8,32 @@ const vehicleSchema = new mongoose.Schema({
         required: [true, 'Owner name is required'],
         trim: true,
     },
+    name: {
+        type: String,
+        trim: true,
+    },
     location: {
         type: String,
         required: [true, 'Location is required'],
         trim: true,
     },
+    latitude: {
+        type: Number,
+        required: [true, 'Latitude is required'],
+        min: [-90, 'Latitude must be between -90 and 90'],
+        max: [90, 'Latitude must be between -90 and 90'],
+    },
+    longitude: {
+        type: Number,
+        required: [true, 'Longitude is required'],
+        min: [-180, 'Longitude must be between -180 and 180'],
+        max: [180, 'Longitude must be between -180 and 180'],
+    },
     vehicleType: {
         type: String,
         enum: {
             values: VEHICLE_TYPES,
-            message: 'Vehicle type must be one of: tractor, harvester, rotavator, sprayer'
+            message: 'Vehicle type must be one of: tractor, harvester, rotavator, sprayer, earth_mover, car, bike, equipment'
         },
         required: [true, 'Vehicle type is required'],
     },
@@ -39,9 +55,17 @@ const vehicleSchema = new mongoose.Schema({
         required: [true, 'Per hour rent is required'],
         min: [0, 'Per hour rent cannot be negative'],
     },
+    pricePerDay: {
+        type: Number,
+        min: [0, 'Price per day cannot be negative'],
+    },
     imagePath: {
         type: String,
         required: [true, 'Vehicle image is required'],
+    },
+    availabilityStatus: {
+        type: Boolean,
+        default: true,
     },
     createdAt: {
         type: Date,

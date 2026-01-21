@@ -43,6 +43,10 @@ const DISTRICT_COORDINATES = {
     'Virudhunagar': { lat: 9.5850, lon: 77.9624 }
 };
 
+// Simple in-memory cache to reduce API calls
+const weatherCache = new Map();
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+
 // Fetch weather data from Open-Meteo API
 const fetchWeatherFromAPI = async (district) => {
     const coords = DISTRICT_COORDINATES[district];
@@ -57,13 +61,34 @@ const fetchWeatherFromAPI = async (district) => {
         throw new Error(`District not found: ${district}`);
     }
 
+    // Check cache first
+    const cacheKey = `${district}-${coords.lat}-${coords.lon}`;
+    const cached = weatherCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+        console.log(`Using cached weather data for ${district}`);
+        return cached.data;
+    }
+
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max&timezone=Asia/Kolkata&forecast_days=14`;
 
     try {
         const response = await axios.get(url);
+        // Cache the result
+        weatherCache.set(cacheKey, {
+            data: response.data,
+            timestamp: Date.now()
+        });
+        console.log(`Fetched and cached weather data for ${district}`);
         return response.data;
     } catch (error) {
         console.error('Error fetching from Open-Meteo API:', error.message);
+
+        // If rate limited and we have old cache, use it
+        if (error.response?.status === 429 && cached) {
+            console.log(`Rate limited - using stale cache for ${district}`);
+            return cached.data;
+        }
+
         throw new Error('Failed to fetch weather data from external API');
     }
 };

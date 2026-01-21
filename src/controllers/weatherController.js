@@ -1,3 +1,4 @@
+const axios = require('axios');
 const WeatherAlert = require('../models/WeatherAlert');
 const User = require('../models/User');
 
@@ -58,12 +59,13 @@ const fetchWeatherFromAPI = async (district) => {
 
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max&timezone=Asia/Kolkata&forecast_days=14`;
 
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error('Failed to fetch weather data');
+    try {
+        const response = await axios.get(url);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching from Open-Meteo API:', error.message);
+        throw new Error('Failed to fetch weather data from external API');
     }
-
-    return await response.json();
 };
 
 // Map weather codes to conditions
@@ -390,12 +392,34 @@ exports.markAlertAsRead = async (req, res) => {
 // @access  Private
 exports.refreshAlerts = async (req, res) => {
     try {
+        // Get user with validation
         const user = await User.findById(req.user.id);
-        const district = user.location || 'Chennai';
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
 
-        // Fetch new forecast
-        const weatherData = await fetchWeatherFromAPI(district);
+        const district = user.location || 'Chennai';
+        console.log(`Refreshing alerts for user ${user._id}, district: ${district}`);
+
+        // Fetch new forecast with error handling
+        let weatherData;
+        try {
+            weatherData = await fetchWeatherFromAPI(district);
+        } catch (apiError) {
+            console.error('API Error:', apiError.message);
+            return res.status(503).json({
+                success: false,
+                message: 'Weather service temporarily unavailable. Please try again later.',
+                error: apiError.message
+            });
+        }
+
+        // Generate new alerts
         const newAlerts = await generateAlertsFromForecast(req.user.id, district, weatherData);
+        console.log(`Generated ${newAlerts.length} new alerts for user ${user._id}`);
 
         // Remove old alerts
         await WeatherAlert.deleteMany({ user: req.user.id });
@@ -405,6 +429,7 @@ exports.refreshAlerts = async (req, res) => {
             await WeatherAlert.insertMany(newAlerts);
         }
 
+        // Fetch updated alerts
         const alerts = await WeatherAlert.find({
             user: req.user.id,
             expiresAt: { $gt: new Date() }
@@ -426,7 +451,8 @@ exports.refreshAlerts = async (req, res) => {
         console.error('Error refreshing alerts:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to refresh alerts'
+            message: 'Failed to refresh alerts',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };

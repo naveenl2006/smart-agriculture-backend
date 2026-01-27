@@ -141,7 +141,14 @@ const scrapeKeralaMarketPrices = async () => {
         console.log(`✅ Successfully scraped ${prices.length} vegetable prices from Ecostat.`);
         return prices;
     } catch (error) {
-        console.error('❌ Scraping error:', error.message);
+        // Check for network/DNS errors - don't spam the logs
+        if (error.code === 'ENOTFOUND' || error.code === 'EAI_AGAIN' || error.code === 'ECONNREFUSED') {
+            console.warn('⚠️ Kerala Ecostat website is unreachable (network/DNS issue). Using cached data if available.');
+        } else if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
+            console.warn('⚠️ Kerala Ecostat request timed out. Using cached data if available.');
+        } else {
+            console.error('❌ Scraping error:', error.message);
+        }
         return null;
     }
 };

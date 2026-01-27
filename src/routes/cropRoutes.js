@@ -9,14 +9,18 @@ const {
     getRecommendationHistory,
     createCrop,
     updateCrop,
+    getNDVIRecommendations,
+    getNDVIDistricts,
 } = require('../controllers/cropController');
 
 // Public routes
 router.get('/', getCrops);
+router.get('/ndvi-districts', getNDVIDistricts);
 router.get('/:id', getCropById);
 
 // Protected routes
 router.post('/recommend', protect, getRecommendations);
+router.post('/ndvi-recommend', protect, getNDVIRecommendations);
 router.get('/recommendations/history', protect, getRecommendationHistory);
 
 // Admin routes
@@ -24,3 +28,4 @@ router.post('/', protect, authorize('admin'), createCrop);
 router.put('/:id', protect, authorize('admin'), updateCrop);
 
 module.exports = router;
+

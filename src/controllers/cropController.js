@@ -2,6 +2,7 @@ const Crop = require('../models/Crop');
 const CropRecommendation = require('../models/CropRecommendation');
 const Farmer = require('../models/Farmer');
 const { PAGINATION } = require('../config/constants');
+const ndviService = require('../services/ndviService');
 
 // @desc    Get all crops
 // @route   GET /api/crops
@@ -217,6 +218,44 @@ const updateCrop = async (req, res, next) => {
     }
 };
 
+// @desc    Get NDVI-based crop recommendations
+// @route   POST /api/crops/ndvi-recommend
+// @access  Private
+const getNDVIRecommendations = async (req, res, next) => {
+    try {
+        const { district } = req.body;
+
+        if (!district) {
+            return res.status(400).json({
+                success: false,
+                message: 'District is required for NDVI analysis',
+            });
+        }
+
+        // Get NDVI recommendations from service
+        const result = ndviService.getNdviRecommendations(district);
+
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get list of supported districts for NDVI
+// @route   GET /api/crops/ndvi-districts
+// @access  Public
+const getNDVIDistricts = async (req, res, next) => {
+    try {
+        const districts = ndviService.getSupportedDistricts();
+        res.json({
+            success: true,
+            data: districts,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getCrops,
     getCropById,
@@ -224,4 +263,6 @@ module.exports = {
     getRecommendationHistory,
     createCrop,
     updateCrop,
+    getNDVIRecommendations,
+    getNDVIDistricts,
 };
